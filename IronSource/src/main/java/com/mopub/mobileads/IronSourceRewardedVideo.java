@@ -42,15 +42,10 @@ public class IronSourceRewardedVideo extends BaseAd implements ISDemandOnlyRewar
     // Configuration keys
     private static final String APPLICATION_KEY = "applicationKey";
     private static final String INSTANCE_ID_KEY = "instanceId";
-    private static final String MEDIATION_TYPE = "mopub";
     private static final String ADAPTER_NAME = IronSourceRewardedVideo.class.getSimpleName();
 
     // Network identifier of ironSource
-    @NonNull
     private String mInstanceId = IronSourceAdapterConfiguration.DEFAULT_INSTANCE_ID;
-
-    @Nullable
-    private Activity mRewardedVideoActivity;
 
     @NonNull
     @Override
@@ -62,7 +57,7 @@ public class IronSourceRewardedVideo extends BaseAd implements ISDemandOnlyRewar
     private IronSourceAdapterConfiguration mIronSourceAdapterConfiguration;
 
     /**
-     * Mopub API
+     * MoPub API
      */
 
     public IronSourceRewardedVideo() {
@@ -99,8 +94,6 @@ public class IronSourceRewardedVideo extends BaseAd implements ISDemandOnlyRewar
         Preconditions.checkNotNull(launcherActivity);
         Preconditions.checkNotNull(adData);
 
-        mRewardedVideoActivity = launcherActivity;
-
         boolean canCollectPersonalInfo = MoPub.canCollectPersonalInformation();
         IronSource.setConsent(canCollectPersonalInfo);
 
@@ -122,9 +115,19 @@ public class IronSourceRewardedVideo extends BaseAd implements ISDemandOnlyRewar
                 mInstanceId = instanceId;
             }
 
-            Context context = launcherActivity.getApplicationContext();
-            initIronSourceSDK(context, applicationKey, extras);
-            return true;
+            final Context context = launcherActivity.getApplicationContext();
+
+            if (context != null) {
+                initIronSourceSDK(context, applicationKey, extras);
+                return true;
+            } else {
+                MoPubLog.log(CUSTOM, ADAPTER_NAME, "ironSource Interstitial failed to initialize." +
+                        "Application Context obtained by Activity launching this interstitial is null.");
+                if (mLoadListener != null) {
+                    mLoadListener.onAdLoadFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
+                }
+                return false;
+            }
 
         } catch (Exception e) {
             MoPubLog.log(CUSTOM_WITH_THROWABLE, e);
@@ -152,6 +155,15 @@ public class IronSourceRewardedVideo extends BaseAd implements ISDemandOnlyRewar
 
         setAutomaticImpressionAndClickTracking(false);
 
+        if (!(context instanceof Activity)) {
+            MoPubLog.log(LOAD_FAILED, ADAPTER_NAME, MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR.getIntCode(), MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
+            MoPubLog.log(CUSTOM, ADAPTER_NAME, "Failed to load rewarded video as ironSource requires an Activity context.");
+            if (mLoadListener != null) {
+                mLoadListener.onAdLoadFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
+            }
+            return;
+        }
+
         final Map<String, String> extras = adData.getExtras();
 
         /* Update instance id if extras contain it. ironSource requires instanceId to perform proper ad requests.
@@ -170,19 +182,12 @@ public class IronSourceRewardedVideo extends BaseAd implements ISDemandOnlyRewar
 
         final String adMarkup = extras.get(DataKeys.ADM_KEY);
 
-        if( mRewardedVideoActivity != null ){
-            if(!TextUtils.isEmpty(adMarkup)) {
-                MoPubLog.log(CUSTOM, ADAPTER_NAME, "ADM field is populated. Will make Advanced Bidding request.");
-                IronSource.loadISDemandOnlyRewardedVideoWithAdm(mRewardedVideoActivity,mInstanceId, adMarkup);
-            } else {
-                IronSource.loadISDemandOnlyRewardedVideo(mRewardedVideoActivity,mInstanceId);
-            }
-        }else{
-            MoPubLog.log(CUSTOM, ADAPTER_NAME, "Failed to load  rewarded video as the activity is null.");
-            mLoadListener.onAdLoadFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
-
+        if(!TextUtils.isEmpty(adMarkup)) {
+            MoPubLog.log(CUSTOM, ADAPTER_NAME, "ADM field is populated. Will make Advanced Bidding request.");
+            IronSource.loadISDemandOnlyRewardedVideoWithAdm((Activity) context, mInstanceId, adMarkup);
+        } else {
+            IronSource.loadISDemandOnlyRewardedVideo((Activity) context, mInstanceId);
         }
-
     }
 
     protected boolean hasVideoAvailable() {

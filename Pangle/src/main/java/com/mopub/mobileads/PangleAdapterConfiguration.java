@@ -52,11 +52,9 @@ public class PangleAdapterConfiguration extends BaseAdapterConfiguration {
      * Key for publisher to set on to initialize Pangle SDK. (Optional)
      */
     public static final String SUPPORT_MULTIPROCESS_EXTRA_KEY = "support_multiprocess";
-    public static final String ALLOW_AD_IN_LOCK_SCREEN_EXTRA_KEY = "allow_lock_screen";
 
     private static boolean sIsSDKInitialized;
     private static boolean sIsSupportMultiProcess;
-    private static boolean sIsAllowAdShowInLockScreen;
 
     private static String mRewardName;
     private static int mRewardAmount;
@@ -107,8 +105,6 @@ public class PangleAdapterConfiguration extends BaseAdapterConfiguration {
 
                     sIsSupportMultiProcess = configuration.get(SUPPORT_MULTIPROCESS_EXTRA_KEY) != null ?
                             Boolean.valueOf(configuration.get(SUPPORT_MULTIPROCESS_EXTRA_KEY)) : false;
-                    sIsAllowAdShowInLockScreen = configuration.get(ALLOW_AD_IN_LOCK_SCREEN_EXTRA_KEY) != null ?
-                            Boolean.valueOf(configuration.get(ALLOW_AD_IN_LOCK_SCREEN_EXTRA_KEY)) : false;
 
                     pangleSdkInit(context, appId);
                     networkInitializationSucceeded = true;
@@ -154,8 +150,6 @@ public class PangleAdapterConfiguration extends BaseAdapterConfiguration {
             TTAdSdk.init(context, new TTAdConfig.Builder()
                     .appId(appId)
                     .useTextureView(hasWakeLockPermission)
-                    .appName(MOPUB_NETWORK_NAME)
-                    .allowShowPageWhenScreenLock(sIsAllowAdShowInLockScreen)
                     /* Allow or deny permission to display the landing page ad in the lock screen */
                     .debug(MoPubLog.getLogLevel() == MoPubLog.LogLevel.DEBUG)
                     .supportMultiProcess(sIsSupportMultiProcess)
@@ -179,7 +173,7 @@ public class PangleAdapterConfiguration extends BaseAdapterConfiguration {
 
             JSONObject adapterVersionObject = new JSONObject();
             adapterVersionObject.putOpt("name", "adapter_version");
-            adapterVersionObject.putOpt("value", "1.2.0");
+            adapterVersionObject.putOpt("value", "1.4.0");
             adCallSource.put(adapterVersionObject);
         } catch (Throwable exception) {
             MoPubLog.log(CUSTOM, ADAPTER_NAME, "AdCallSource encounter parsing error: " + exception.getLocalizedMessage());

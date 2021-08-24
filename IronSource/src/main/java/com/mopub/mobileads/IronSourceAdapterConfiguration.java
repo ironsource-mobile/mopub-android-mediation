@@ -39,7 +39,7 @@ public class IronSourceAdapterConfiguration extends BaseAdapterConfiguration {
     private static final String INTERSTITIAL_KEY = "interstitial";
     private static final String MEDIATION_TYPE = "mopub";
     private static final String REWARDEDVIDEO_KEY = "rewardedvideo";
-    
+
     @NonNull
     @Override
     public String getAdapterVersion() {
@@ -85,32 +85,30 @@ public class IronSourceAdapterConfiguration extends BaseAdapterConfiguration {
 
         boolean networkInitializationSucceeded = false;
 
+
         synchronized (IronSourceAdapterConfiguration.class) {
             try {
                 if (configuration != null) {
 
-
                     final String appKey = configuration.get(APPLICATION_KEY);
 
-                    if (TextUtils.isEmpty(appKey)) {
-                        MoPubLog.log(CUSTOM, "IronSource's initialization not" +
-                                " started. Ensure ironSource's " + APPLICATION_KEY +
-                                " is populated on the MoPub dashboard.");
-                    } else if ( context != null ){
+                    if (!TextUtils.isEmpty(appKey)) {
                         IronSource.AD_UNIT[] adUnitsToInitList = getIronSourceAdUnitsToInitList(context, configuration);
                         initIronSourceSDK(context, appKey, adUnitsToInitList);
                         networkInitializationSucceeded = true;
+                    } else {
+                        MoPubLog.log(CUSTOM, "IronSource's initialization not" +
+                                " started. Ensure ironSource's " + APPLICATION_KEY +
+                                " is populated on the MoPub dashboard.");
                     }
-
                 } else {
                     MoPubLog.log(CUSTOM, ADAPTER_NAME, "IronSource's initialization via " +
                             ADAPTER_NAME + " not started. No configuration information present to initialize." +
-                            "Make sure you pass applicationKey on MoPub UI " +
-                            "or via Mediated Network Configuration during MoPub initialization.");
+                            "Make sure to pass in ironSource appKey parameter to MoPub initialization via network configuration");
                 }
             } catch (Exception e) {
                 MoPubLog.log(CUSTOM_WITH_THROWABLE, "Initializing ironSource has encountered " +
-                        "an exception.", e);
+                        "an exception. ", e);
             }
         }
 
@@ -119,7 +117,7 @@ public class IronSourceAdapterConfiguration extends BaseAdapterConfiguration {
                     MoPubErrorCode.ADAPTER_INITIALIZATION_SUCCESS);
         } else {
             MoPubLog.log(CUSTOM, ADAPTER_NAME, "IronSource's initialization via " +
-                    ADAPTER_NAME + " failed. Will attempt to initialize on the first ad request to ironSource.");
+                    ADAPTER_NAME + " failed.");
             listener.onNetworkInitializationFinished(IronSourceAdapterConfiguration.class,
                     MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
         }
@@ -134,8 +132,9 @@ public class IronSourceAdapterConfiguration extends BaseAdapterConfiguration {
         }
     }
 
-    public static void initIronSourceSDK(Context context, String appKey, IronSource.AD_UNIT[] adUnitsToInitList) {
-        IronSource.setMediationType(MEDIATION_TYPE + IRONSOURCE_ADAPTER_VERSION
+    public static void initIronSourceSDK(@NonNull Context context, @NonNull String appKey, IronSource.AD_UNIT[] adUnitsToInitList) {
+        MoPubLog.log(CUSTOM, ADAPTER_NAME, "IronSource initialization started with appKey: " + appKey);
+                IronSource.setMediationType(MEDIATION_TYPE + IRONSOURCE_ADAPTER_VERSION
                 + "SDK" + getMoPubSdkVersion());
         IronSource.initISDemandOnly(context, appKey, adUnitsToInitList);
     }

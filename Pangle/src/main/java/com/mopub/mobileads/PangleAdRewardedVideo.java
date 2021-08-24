@@ -134,7 +134,6 @@ public class PangleAdRewardedVideo extends BaseAd {
 
         final AdSlot adSlot = new AdSlot.Builder()
                 .setCodeId(getAdNetworkId())
-                .setSupportDeepLink(true)
                 .setImageAcceptedSize(1080, 1920)
                 .setRewardName(PangleAdapterConfiguration.getRewardName())
                 .setRewardAmount(PangleAdapterConfiguration.getRewardAmount())
@@ -264,12 +263,12 @@ public class PangleAdRewardedVideo extends BaseAd {
             MoPubLog.log(getAdNetworkId(), CUSTOM, ADAPTER_NAME, "onVideoError.");
 
             if (mInteractionListener != null) {
-                mInteractionListener.onAdFailed(MoPubErrorCode.VIDEO_PLAYBACK_ERROR);
+                mInteractionListener.onAdFailed(MoPubErrorCode.AD_SHOW_ERROR);
             }
         }
 
         @Override
-        public void onRewardVerify(boolean rewardVerify, int rewardAmount, String rewardName) {
+        public void onRewardVerify(boolean rewardVerify, int rewardAmount, String rewardName, int errorCode, String errorMsg) {
             if (!TextUtils.isEmpty(rewardName)) {
                 MoPubLog.log(getAdNetworkId(), CUSTOM, ADAPTER_NAME, "onRewardVerify(): "
                         + rewardVerify + ", rewardAmount = " + rewardAmount +
@@ -281,6 +280,9 @@ public class PangleAdRewardedVideo extends BaseAd {
                     mInteractionListener.onAdComplete(MoPubReward.success(rewardName, rewardAmount));
                 }
             } else {
+                MoPubLog.log(getAdNetworkId(), CUSTOM, ADAPTER_NAME, "onRewardVerify(): "
+                        + rewardVerify + ", errorCode = " + errorCode +
+                        ", errorMsg = " + errorMsg);
                 MoPubLog.log(getAdNetworkId(), SHOULD_REWARD, ADAPTER_NAME,
                         MoPubReward.DEFAULT_REWARD_AMOUNT, MoPubReward.NO_REWARD_LABEL);
 

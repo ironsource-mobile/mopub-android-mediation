@@ -4,6 +4,8 @@
 
 package com.mopub.nativeads;
 
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
+
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.SurfaceTexture;
@@ -24,9 +26,7 @@ import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Dips;
 import com.mopub.common.util.Drawables;
 import com.mopub.mobileads.VastVideoProgressBarWidget;
-import com.mopub.mobileads.resource.DrawableConstants.GradientStrip;
-
-import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
+import com.mopub.mobileads.admob.R;
 
 public class GooglePlayServicesMediaLayout extends RelativeLayout {
     public enum Mode {IMAGE, PLAYING, LOADING, BUFFERING, PAUSED, FINISHED}
@@ -157,7 +157,7 @@ public class GooglePlayServicesMediaLayout extends RelativeLayout {
         mBottomGradient.setLayoutParams(bottomGradientParams);
         final GradientDrawable bottomGradientDrawable =
                 new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,
-                        new int[]{GradientStrip.START_COLOR, GradientStrip.END_COLOR});
+                        new int[]{R.color.gradient_strip_start_color, R.color.gradient_strip_end_color});
         mBottomGradient.setImageDrawable(bottomGradientDrawable);
         addView(mBottomGradient);
 
@@ -168,12 +168,11 @@ public class GooglePlayServicesMediaLayout extends RelativeLayout {
         mTopGradient.setLayoutParams(topGradientParams);
         final GradientDrawable topGradientDrawable =
                 new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
-                        new int[]{GradientStrip.START_COLOR, GradientStrip.END_COLOR});
+                        new int[]{R.color.gradient_strip_start_color, R.color.gradient_strip_end_color});
         mTopGradient.setImageDrawable(topGradientDrawable);
         addView(mTopGradient);
 
-        mVideoProgress = new VastVideoProgressBarWidget(getContext());
-        mVideoProgress.setAnchorId(mVideoTextureView.getId());
+        mVideoProgress = new VastVideoProgressBarWidget(getContext(), null);
         mVideoProgress.calibrateAndMakeVisible(1000, 0);
         addView(mVideoProgress);
 
