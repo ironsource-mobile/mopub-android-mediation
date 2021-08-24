@@ -1,11 +1,7 @@
 package com.mopub.mobileads;
 
-import android.app.Activity;
 import android.content.Context;
 import android.text.TextUtils;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.ironsource.mediationsdk.IronSource;
 import com.ironsource.mediationsdk.logger.IronSourceError;
@@ -16,18 +12,36 @@ import com.mopub.common.MoPub;
 import com.mopub.common.OnNetworkInitializationFinishedListener;
 import com.mopub.common.Preconditions;
 import com.mopub.common.logging.MoPubLog;
-import com.mopub.mobileads.ironsource.BuildConfig;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import static com.ironsource.mediationsdk.logger.IronSourceError.ERROR_BN_INIT_FAILED_AFTER_LOAD;
+import static com.ironsource.mediationsdk.logger.IronSourceError.ERROR_BN_INSTANCE_INIT_ERROR;
+import static com.ironsource.mediationsdk.logger.IronSourceError.ERROR_BN_INSTANCE_INIT_TIMEOUT;
+import static com.ironsource.mediationsdk.logger.IronSourceError.ERROR_BN_INSTANCE_LOAD_EMPTY_ADAPTER;
+import static com.ironsource.mediationsdk.logger.IronSourceError.ERROR_BN_INSTANCE_LOAD_EMPTY_BANNER;
+import static com.ironsource.mediationsdk.logger.IronSourceError.ERROR_BN_INSTANCE_LOAD_TIMEOUT;
+import static com.ironsource.mediationsdk.logger.IronSourceError.ERROR_BN_INSTANCE_RELOAD_TIMEOUT;
+import static com.ironsource.mediationsdk.logger.IronSourceError.ERROR_BN_LOAD_AFTER_INIT_FAILED;
+import static com.ironsource.mediationsdk.logger.IronSourceError.ERROR_BN_LOAD_AFTER_LONG_INITIATION;
+import static com.ironsource.mediationsdk.logger.IronSourceError.ERROR_BN_LOAD_EXCEPTION;
+import static com.ironsource.mediationsdk.logger.IronSourceError.ERROR_BN_LOAD_NO_CONFIG;
+import static com.ironsource.mediationsdk.logger.IronSourceError.ERROR_BN_LOAD_NO_FILL;
+import static com.ironsource.mediationsdk.logger.IronSourceError.ERROR_BN_LOAD_PLACEMENT_CAPPED;
+import static com.ironsource.mediationsdk.logger.IronSourceError.ERROR_BN_LOAD_WHILE_LONG_INITIATION;
+import static com.ironsource.mediationsdk.logger.IronSourceError.ERROR_BN_RELOAD_SKIP_BACKGROUND;
+import static com.ironsource.mediationsdk.logger.IronSourceError.ERROR_BN_RELOAD_SKIP_INVISIBLE;
+import static com.ironsource.mediationsdk.logger.IronSourceError.ERROR_BN_UNSUPPORTED_SIZE;
 import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.CUSTOM;
 import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.CUSTOM_WITH_THROWABLE;
 
 public class IronSourceAdapterConfiguration extends BaseAdapterConfiguration {
-    public static final String IRONSOURCE_ADAPTER_VERSION = "510";
+    public static final String IRONSOURCE_ADAPTER_VERSION = "520";
     public static final String DEFAULT_INSTANCE_ID = "0";
 
     private static final String ADAPTER_NAME = IronSourceAdapterConfiguration.class.getSimpleName();
@@ -39,6 +53,8 @@ public class IronSourceAdapterConfiguration extends BaseAdapterConfiguration {
     private static final String INTERSTITIAL_KEY = "interstitial";
     private static final String MEDIATION_TYPE = "mopub";
     private static final String REWARDEDVIDEO_KEY = "rewardedvideo";
+    private static final String BANNER_KEY = "banner";
+
 
     @NonNull
     @Override
@@ -85,6 +101,8 @@ public class IronSourceAdapterConfiguration extends BaseAdapterConfiguration {
 
         boolean networkInitializationSucceeded = false;
 
+        boolean canCollectPersonalInfo = MoPub.canCollectPersonalInformation();
+        IronSource.setConsent(canCollectPersonalInfo);
 
         synchronized (IronSourceAdapterConfiguration.class) {
             try {
@@ -134,7 +152,7 @@ public class IronSourceAdapterConfiguration extends BaseAdapterConfiguration {
 
     public static void initIronSourceSDK(@NonNull Context context, @NonNull String appKey, IronSource.AD_UNIT[] adUnitsToInitList) {
         MoPubLog.log(CUSTOM, ADAPTER_NAME, "IronSource initialization started with appKey: " + appKey);
-                IronSource.setMediationType(MEDIATION_TYPE + IRONSOURCE_ADAPTER_VERSION
+        IronSource.setMediationType(MEDIATION_TYPE + IRONSOURCE_ADAPTER_VERSION
                 + "SDK" + getMoPubSdkVersion());
         IronSource.initISDemandOnly(context, appKey, adUnitsToInitList);
     }
@@ -169,12 +187,17 @@ public class IronSourceAdapterConfiguration extends BaseAdapterConfiguration {
 
         final String rewardedVideoValue = configuration.get(REWARDEDVIDEO_KEY);
         final String interstitialValue = configuration.get(INTERSTITIAL_KEY);
+        final String bannerValue = configuration.get(BANNER_KEY);
+
 
         if (rewardedVideoValue != null && rewardedVideoValue.equals("true"))
             adUnitsToInit.add(IronSource.AD_UNIT.REWARDED_VIDEO);
 
         if (interstitialValue != null && interstitialValue.equals("true"))
             adUnitsToInit.add(IronSource.AD_UNIT.INTERSTITIAL);
+
+        if (interstitialValue != null && bannerValue.equals("true"))
+            adUnitsToInit.add(IronSource.AD_UNIT.BANNER);
 
         return adUnitsToInit.toArray(new IronSource.AD_UNIT[adUnitsToInit.size()]);
     }
@@ -226,5 +249,51 @@ public class IronSourceAdapterConfiguration extends BaseAdapterConfiguration {
             default:
                 return MoPubErrorCode.UNSPECIFIED;
         }
+    }
+
+    public static MoPubErrorCode convertISNBannerErrorToMoPubError (IronSourceError ironSourceError) {
+
+        MoPubErrorCode moPubErrorCode = MoPubErrorCode.UNSPECIFIED;
+
+        switch (ironSourceError.getErrorCode()){
+            case ERROR_BN_INIT_FAILED_AFTER_LOAD:
+            case ERROR_BN_LOAD_AFTER_INIT_FAILED:
+                moPubErrorCode = MoPubErrorCode.NETWORK_INVALID_STATE;
+                break;
+            case ERROR_BN_LOAD_AFTER_LONG_INITIATION:
+            case ERROR_BN_LOAD_WHILE_LONG_INITIATION:
+                break;
+            case ERROR_BN_LOAD_PLACEMENT_CAPPED:
+                break;
+            case ERROR_BN_LOAD_EXCEPTION:
+                break;
+            case ERROR_BN_INSTANCE_INIT_TIMEOUT:
+            case ERROR_BN_INSTANCE_LOAD_TIMEOUT:
+            case ERROR_BN_INSTANCE_RELOAD_TIMEOUT:
+                moPubErrorCode = MoPubErrorCode.NETWORK_TIMEOUT;
+                break;
+            case ERROR_BN_INSTANCE_INIT_ERROR:
+                break;
+            case ERROR_BN_INSTANCE_LOAD_EMPTY_BANNER:
+            case ERROR_BN_LOAD_NO_FILL:
+                moPubErrorCode = MoPubErrorCode.NO_FILL;
+                break;
+            case ERROR_BN_INSTANCE_LOAD_EMPTY_ADAPTER:
+                moPubErrorCode = MoPubErrorCode.ADAPTER_NOT_FOUND;
+                break;
+            case ERROR_BN_UNSUPPORTED_SIZE:
+                moPubErrorCode = MoPubErrorCode.NETWORK_NO_FILL;
+                break;
+            case ERROR_BN_LOAD_NO_CONFIG:
+                moPubErrorCode = MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR;
+                break;
+            case ERROR_BN_RELOAD_SKIP_INVISIBLE:
+            case ERROR_BN_RELOAD_SKIP_BACKGROUND:
+            default:
+                moPubErrorCode = MoPubErrorCode.UNSPECIFIED;
+                break;
+        }
+
+        return moPubErrorCode;
     }
 }
