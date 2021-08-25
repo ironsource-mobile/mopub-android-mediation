@@ -251,49 +251,36 @@ public class IronSourceAdapterConfiguration extends BaseAdapterConfiguration {
         }
     }
 
-    public static MoPubErrorCode convertISNBannerErrorToMoPubError (IronSourceError ironSourceError) {
+    public static MoPubErrorCode convertISNBannerErrorToMoPubError(IronSourceError ironSourceError) {
+        if (ironSourceError == null) {
+            return MoPubErrorCode.INTERNAL_ERROR;
+        }
 
-        MoPubErrorCode moPubErrorCode = MoPubErrorCode.UNSPECIFIED;
-
-        switch (ironSourceError.getErrorCode()){
+        switch (ironSourceError.getErrorCode()) {
             case ERROR_BN_INIT_FAILED_AFTER_LOAD:
             case ERROR_BN_LOAD_AFTER_INIT_FAILED:
-                moPubErrorCode = MoPubErrorCode.NETWORK_INVALID_STATE;
-                break;
             case ERROR_BN_LOAD_AFTER_LONG_INITIATION:
             case ERROR_BN_LOAD_WHILE_LONG_INITIATION:
-                break;
-            case ERROR_BN_LOAD_PLACEMENT_CAPPED:
-                break;
             case ERROR_BN_LOAD_EXCEPTION:
-                break;
+                return MoPubErrorCode.NETWORK_INVALID_STATE;
             case ERROR_BN_INSTANCE_INIT_TIMEOUT:
             case ERROR_BN_INSTANCE_LOAD_TIMEOUT:
             case ERROR_BN_INSTANCE_RELOAD_TIMEOUT:
-                moPubErrorCode = MoPubErrorCode.NETWORK_TIMEOUT;
-                break;
+                return MoPubErrorCode.NETWORK_TIMEOUT;
+            case ERROR_BN_INSTANCE_LOAD_EMPTY_ADAPTER:
+                return MoPubErrorCode.ADAPTER_NOT_FOUND;
             case ERROR_BN_INSTANCE_INIT_ERROR:
-                break;
             case ERROR_BN_INSTANCE_LOAD_EMPTY_BANNER:
             case ERROR_BN_LOAD_NO_FILL:
-                moPubErrorCode = MoPubErrorCode.NO_FILL;
-                break;
-            case ERROR_BN_INSTANCE_LOAD_EMPTY_ADAPTER:
-                moPubErrorCode = MoPubErrorCode.ADAPTER_NOT_FOUND;
-                break;
+            case ERROR_BN_LOAD_PLACEMENT_CAPPED:
             case ERROR_BN_UNSUPPORTED_SIZE:
-                moPubErrorCode = MoPubErrorCode.NETWORK_NO_FILL;
-                break;
+                return MoPubErrorCode.NETWORK_NO_FILL;
             case ERROR_BN_LOAD_NO_CONFIG:
-                moPubErrorCode = MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR;
-                break;
+                return MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR;
             case ERROR_BN_RELOAD_SKIP_INVISIBLE:
             case ERROR_BN_RELOAD_SKIP_BACKGROUND:
             default:
-                moPubErrorCode = MoPubErrorCode.UNSPECIFIED;
-                break;
+                return MoPubErrorCode.UNSPECIFIED;
         }
-
-        return moPubErrorCode;
     }
 }

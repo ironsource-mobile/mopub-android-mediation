@@ -41,8 +41,6 @@ import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.WILL_LEAVE_APPLI
  */
 public class IronSourceBanner extends BaseAd implements BannerListener {
 
-    // region private vars
-
     // Configuration keys
     private static final String APPLICATION_KEY = "applicationKey";
     private static final String INSTANCE_ID_KEY = "instanceId";
@@ -57,14 +55,8 @@ public class IronSourceBanner extends BaseAd implements BannerListener {
     @NonNull
     private final IronSourceAdapterConfiguration mIronSourceAdapterConfiguration;
 
-    // endregion
-
-
-    // region Base Ad Override
-
     @SuppressWarnings("unused")
     public IronSourceBanner() {
-        MoPubLog.log(CUSTOM, ADAPTER_NAME, "IronSource IronSourceBanner() hash= " + this.hashCode());
         mIronSourceAdapterConfiguration = new IronSourceAdapterConfiguration();
     }
 
@@ -76,7 +68,6 @@ public class IronSourceBanner extends BaseAd implements BannerListener {
 
     @Override
     protected boolean checkAndInitializeSdk(@NonNull Activity activity, @NonNull AdData adData) {
-        MoPubLog.log(CUSTOM, ADAPTER_NAME, "checkAndInitializeSdk()");
         Preconditions.checkNotNull(activity);
         Preconditions.checkNotNull(adData);
 
@@ -97,7 +88,7 @@ public class IronSourceBanner extends BaseAd implements BannerListener {
                 return false;
             }
 
-            String applicationKey = extras.get(APPLICATION_KEY);
+            final String applicationKey = extras.get(APPLICATION_KEY);
             final Context context = activity.getApplicationContext();
 
             if (context != null) {
@@ -126,20 +117,13 @@ public class IronSourceBanner extends BaseAd implements BannerListener {
 
     @Override
     protected void load(@NonNull final Context context, @NonNull final AdData adData) {
-        MoPubLog.log(CUSTOM, ADAPTER_NAME, "IronSource load() hash= " + this.hashCode());
-
         Preconditions.checkNotNull(context);
         Preconditions.checkNotNull(adData);
 
         setAutomaticImpressionAndClickTracking(false);
 
         if (!(context instanceof Activity)) {
-            MoPubLog.log (
-                    ADAPTER_NAME,
-                    LOAD_FAILED,
-                    ADAPTER_NAME,
-                    MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR.getIntCode(),
-                    MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
+            MoPubLog.log(ADAPTER_NAME, LOAD_FAILED, ADAPTER_NAME, MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR.getIntCode(), MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
 
             if (mLoadListener != null) {
                 mLoadListener.onAdLoadFailed(MoPubErrorCode.INTERNAL_ERROR);
@@ -155,12 +139,7 @@ public class IronSourceBanner extends BaseAd implements BannerListener {
         }
 
         if (extras.isEmpty()) {
-            MoPubLog.log(
-                    ADAPTER_NAME,
-                    CUSTOM,
-                    mInstanceId,
-                    "missing ad data"
-            );
+            MoPubLog.log(ADAPTER_NAME, CUSTOM, mInstanceId, "missing ad data");
 
             if (mLoadListener != null) {
                 mLoadListener.onAdLoadFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
@@ -198,7 +177,7 @@ public class IronSourceBanner extends BaseAd implements BannerListener {
         final String adMarkup = extras.get(DataKeys.ADM_KEY);
 
         if (TextUtils.isEmpty(adMarkup)) {
-            MoPubLog.log(CUSTOM, ADAPTER_NAME, "ADM field is missing populated. Will not load.");
+            MoPubLog.log(CUSTOM, ADAPTER_NAME, "Advanced Bidding ad markup not available. Aborting the ad request");
             if (mLoadListener != null) {
                 mLoadListener.onAdLoadFailed(MoPubErrorCode.NETWORK_NO_FILL);
             }
@@ -218,7 +197,6 @@ public class IronSourceBanner extends BaseAd implements BannerListener {
     @Nullable
     @Override
     protected View getAdView() {
-        MoPubLog.log(CUSTOM, ADAPTER_NAME, "IronSource getAdView()");
         return mBannerLayout;
     }
 
@@ -227,8 +205,7 @@ public class IronSourceBanner extends BaseAd implements BannerListener {
      */
     @Override
     protected void onInvalidate() {
-        MoPubLog.log(CUSTOM, ADAPTER_NAME, "IronSource onInvalidate()");
-        if(mBannerLayout != null) {
+        if (mBannerLayout != null) {
             IronSource.destroyBanner(mBannerLayout);
             mBannerLayout = null;
         }
@@ -240,10 +217,6 @@ public class IronSourceBanner extends BaseAd implements BannerListener {
         return null;
     }
 
-    // endregion
-
-    // region Helper Methods
-
     private void initIronSourceSDK(Context context, String appKey, Map<String, String> extras) {
         MoPubLog.log(getAdNetworkId(), CUSTOM, ADAPTER_NAME, "ironSource Banner initialization is called with applicationKey: " + appKey);
         IronSource.AD_UNIT[] adUnitsToInit = mIronSourceAdapterConfiguration.getIronSourceAdUnitsToInitList(context, extras);
@@ -251,7 +224,7 @@ public class IronSourceBanner extends BaseAd implements BannerListener {
     }
 
     private int getAdHeight(Map<String, String> extras) {
-        String heightValue = extras.get(AD_HEIGHT);
+        final String heightValue = extras.get(AD_HEIGHT);
 
         if (heightValue != null) {
             return Integer.parseInt(heightValue);
@@ -261,7 +234,7 @@ public class IronSourceBanner extends BaseAd implements BannerListener {
     }
 
     private int getAdWidth(Map<String, String> extras) {
-        String widthValue = extras.get(AD_WIDTH);
+        final String widthValue = extras.get(AD_WIDTH);
 
         if (widthValue != null) {
             return Integer.parseInt(widthValue);
@@ -295,10 +268,6 @@ public class IronSourceBanner extends BaseAd implements BannerListener {
             mLoadListener.onAdLoadFailed(errorCode);
         }
     }
-
-    // endregion
-
-    // region Banner Callbacks
 
     @Override
     public void onBannerAdLoaded() {
@@ -346,10 +315,6 @@ public class IronSourceBanner extends BaseAd implements BannerListener {
         MoPubLog.log(CUSTOM, ADAPTER_NAME, WILL_LEAVE_APPLICATION);
     }
 
-    // endregion
-
-    // region Lifecycle Callbacks
-
     private static final LifecycleListener lifecycleListener = new LifecycleListener() {
 
         @Override
@@ -387,5 +352,4 @@ public class IronSourceBanner extends BaseAd implements BannerListener {
         }
     };
 
-    // endregion
 }
