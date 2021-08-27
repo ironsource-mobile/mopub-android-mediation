@@ -1,4 +1,8 @@
 ## Changelog
+ * 7.1.9.0
+    * This version of the adapters has been certified with ironSource 7.1.9 and MoPub SDK 5.18.0.
+    * Add support for banner ad format via Advanced Bidding.
+
  * 7.1.8.0
     * This version of the adapters has been certified with ironSource 7.1.8 and MoPub SDK 5.18.0.
 

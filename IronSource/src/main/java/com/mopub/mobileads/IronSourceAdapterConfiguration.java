@@ -1,25 +1,5 @@
 package com.mopub.mobileads;
 
-import android.content.Context;
-import android.text.TextUtils;
-
-import com.ironsource.mediationsdk.IronSource;
-import com.ironsource.mediationsdk.logger.IronSourceError;
-import com.ironsource.mediationsdk.utils.IronSourceUtils;
-import com.ironsource.sdk.utils.Logger;
-import com.mopub.common.BaseAdapterConfiguration;
-import com.mopub.common.MoPub;
-import com.mopub.common.OnNetworkInitializationFinishedListener;
-import com.mopub.common.Preconditions;
-import com.mopub.common.logging.MoPubLog;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import static com.ironsource.mediationsdk.logger.IronSourceError.ERROR_BN_INIT_FAILED_AFTER_LOAD;
 import static com.ironsource.mediationsdk.logger.IronSourceError.ERROR_BN_INSTANCE_INIT_ERROR;
 import static com.ironsource.mediationsdk.logger.IronSourceError.ERROR_BN_INSTANCE_INIT_TIMEOUT;
@@ -40,6 +20,27 @@ import static com.ironsource.mediationsdk.logger.IronSourceError.ERROR_BN_UNSUPP
 import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.CUSTOM;
 import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.CUSTOM_WITH_THROWABLE;
 
+import android.content.Context;
+import android.text.TextUtils;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.ironsource.mediationsdk.IronSource;
+import com.ironsource.mediationsdk.logger.IronSourceError;
+import com.ironsource.mediationsdk.utils.IronSourceUtils;
+import com.ironsource.sdk.utils.Logger;
+import com.mopub.common.BaseAdapterConfiguration;
+import com.mopub.common.MoPub;
+import com.mopub.common.OnNetworkInitializationFinishedListener;
+import com.mopub.common.Preconditions;
+import com.mopub.common.logging.MoPubLog;
+import com.mopub.mobileads.ironsource.BuildConfig;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 public class IronSourceAdapterConfiguration extends BaseAdapterConfiguration {
     public static final String IRONSOURCE_ADAPTER_VERSION = "520";
     public static final String DEFAULT_INSTANCE_ID = "0";
@@ -50,11 +51,10 @@ public class IronSourceAdapterConfiguration extends BaseAdapterConfiguration {
     private static final String MOPUB_SDK_VERSION = MoPub.SDK_VERSION;
 
     private static final String APPLICATION_KEY = "applicationKey";
+    private static final String BANNER_KEY = "banner";
     private static final String INTERSTITIAL_KEY = "interstitial";
     private static final String MEDIATION_TYPE = "mopub";
     private static final String REWARDEDVIDEO_KEY = "rewardedvideo";
-    private static final String BANNER_KEY = "banner";
-
 
     @NonNull
     @Override
@@ -73,7 +73,6 @@ public class IronSourceAdapterConfiguration extends BaseAdapterConfiguration {
     public String getMoPubNetworkName() {
         return MOPUB_NETWORK_NAME;
     }
-
 
     public static String getMoPubSdkVersion() {
         return MOPUB_SDK_VERSION.replaceAll("[^A-Za-z0-9]", "");
@@ -101,8 +100,7 @@ public class IronSourceAdapterConfiguration extends BaseAdapterConfiguration {
 
         boolean networkInitializationSucceeded = false;
 
-        boolean canCollectPersonalInfo = MoPub.canCollectPersonalInformation();
-        IronSource.setConsent(canCollectPersonalInfo);
+        IronSource.setConsent(MoPub.canCollectPersonalInformation());
 
         synchronized (IronSourceAdapterConfiguration.class) {
             try {
@@ -189,14 +187,13 @@ public class IronSourceAdapterConfiguration extends BaseAdapterConfiguration {
         final String interstitialValue = configuration.get(INTERSTITIAL_KEY);
         final String bannerValue = configuration.get(BANNER_KEY);
 
-
         if (rewardedVideoValue != null && rewardedVideoValue.equals("true"))
             adUnitsToInit.add(IronSource.AD_UNIT.REWARDED_VIDEO);
 
         if (interstitialValue != null && interstitialValue.equals("true"))
             adUnitsToInit.add(IronSource.AD_UNIT.INTERSTITIAL);
 
-        if (interstitialValue != null && bannerValue.equals("true"))
+        if (bannerValue != null && bannerValue.equals("true"))
             adUnitsToInit.add(IronSource.AD_UNIT.BANNER);
 
         return adUnitsToInit.toArray(new IronSource.AD_UNIT[adUnitsToInit.size()]);
